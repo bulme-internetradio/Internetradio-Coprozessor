@@ -56,7 +56,8 @@ enum Events {
   e_rot1_btn,
   e_change_att,
   e_fm_scan_complete,
-  e_fm_rds
+  e_fm_rds_name,
+  e_fm_rds_text
 };
 
 // Funktion, die eine Ereignisnachricht versendet
@@ -120,12 +121,20 @@ void RDS_process(uint16_t block1, uint16_t block2, uint16_t block3, uint16_t blo
 }
 
 // RDS Daten verarbeiten
-void serviceNameCallback(char * name)
+void fmServiceNameCallback(char *name)
 {
   for (uint8_t i = 0; i < 8; i++) {
     if (name[i] == '\n') name[i] = '\r';
   }
-  printEvent(e_fm_rds, name);
+  printEvent(e_fm_rds_name, name);
+}
+
+void fmTextCallback(char *text)
+{
+  for (uint8_t i = 0; i < 8; i++) {
+    if (text[i] == '\n') text[i] = '\r';
+  }
+  printEvent(e_fm_rds_text, text);
 }
 
 // Diese Funktion wird einmal nach dem Reset aufgerufen
@@ -284,7 +293,8 @@ String cmd_fm_init(String args) {
   radio.setMute(false);
   radio.setVolume(5);
   radio.attachReceiveRDS(RDS_process);
-  rds.attachServicenNameCallback(serviceNameCallback);
+  rds.attachServicenNameCallback(fmServiceNameCallback);
+  rds.attachTextCallback(fmTextCallback);
   return "ok";
 }
 
@@ -304,7 +314,7 @@ String cmd_fm_deinit(String args) {
 String cmd_fm_scan_up(String args) {
   if (!is_fm_initialized) return "noinit";
   radio.seekUp();
-  printEvent(e_fm_scan_complete, String(radio.getFrequency()));
+  // printEvent(e_fm_scan_complete, String(radio.getFrequency()));
   return String(radio.getFrequency());
 }
 
@@ -314,7 +324,7 @@ String cmd_fm_scan_up(String args) {
 String cmd_fm_scan_down(String args) {
   if (!is_fm_initialized) return "noinit";
   radio.seekDown();
-  printEvent(e_fm_scan_complete, String(radio.getFrequency()));
+  // printEvent(e_fm_scan_complete, String(radio.getFrequency()));
   return String(radio.getFrequency());
 }
 
